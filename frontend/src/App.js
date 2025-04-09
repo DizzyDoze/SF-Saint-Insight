@@ -26,7 +26,7 @@ import {FiCamera, FiRotateCw} from 'react-icons/fi';
 import CameraFeed from './components/CameraFeed';
 
 // API URL configuration - adjust port to match your backend
-const API_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:8888';
 
 function App() {
   // Define color scheme for light and dark modes
