@@ -24,8 +24,9 @@ import {
 import {InfoIcon, MoonIcon, SunIcon} from '@chakra-ui/icons';
 import {FiCamera, FiRotateCw} from 'react-icons/fi';
 import CameraFeed from './components/CameraFeed';
+import ReactMarkdown from 'react-markdown'; // Import markdown renderer
 
-// API URL configuration - adjust port to match your backend
+// API URL configuration - ensure this matches your backend port
 const API_URL = 'http://localhost:8888';
 
 function App() {
@@ -225,56 +226,100 @@ function App() {
 
         {/* Render bounding boxes with info bubbles */}
         {detections.map((det) => (
-          <Box
-            key={det.id}
-            position="absolute"
-            left={`${det.boundingBox.x * 100}%`}
-            top={`${det.boundingBox.y * 100}%`}
-            width={`${det.boundingBox.width * 100}%`}
-            height={`${det.boundingBox.height * 100}%`}
-            border="2px solid rgba(255, 255, 255, 0.8)"
-            borderRadius="md"
-            boxShadow="0 0 8px 2px rgba(255, 255, 255, 0.25)"
-            pointerEvents="none"
-            zIndex={2}
-          >
+          <React.Fragment key={det.id}>
+            {/* Original YOLO detection box - unchanged */}
             <Box
               position="absolute"
-              top="0"
-              left="0"
-              m={2}
-              p={3}
+              left={`${det.boundingBox.x * 100}%`}
+              top={`${det.boundingBox.y * 100}%`}
+              width={`${det.boundingBox.width * 100}%`}
+              height={`${det.boundingBox.height * 100}%`}
+              border="2px solid rgba(255, 255, 255, 0.8)"
+              borderRadius="md"
+              boxShadow="0 0 8px 2px rgba(255, 255, 255, 0.25)"
+              pointerEvents="none"
+              zIndex={2}
+            >
+              <Box
+                position="absolute"
+                top="0"
+                left="0"
+                m={2}
+                p={3}
+                bg="rgba(0,0,0,0.7)"
+                color="white"
+                borderRadius="md"
+                boxShadow="lg"
+                pointerEvents="auto"
+                maxW="80%"
+                _after={{
+                  content: '""',
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '20px',
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderTop: '8px solid rgba(0,0,0,0.7)',
+                }}
+              >
+                <Text fontWeight="bold" mb={1} fontSize="md">
+                  {det.title}
+                </Text>
+                <Text fontSize="sm" mb={2} noOfLines={3}>
+                  {det.fact}
+                </Text>
+                <IconButton
+                  aria-label="More Info"
+                  icon={<InfoIcon />}
+                  size="xs"
+                  colorScheme="teal"
+                  onClick={() => handleExpand(det)}
+                />
+              </Box>
+            </Box>
+
+            {/* New adjacent response box with markdown content */}
+            <Box
+              position="absolute"
+              left={`${(det.boundingBox.x + det.boundingBox.width) * 100}%`}
+              top={`${det.boundingBox.y * 100}%`}
+              width={`${det.boundingBox.width * 100}%`}
+              maxHeight={`${det.boundingBox.height * 100}%`}
+              border="2px solid rgba(255, 255, 100, 0.8)"
+              borderRadius="md"
+              boxShadow="0 0 8px 2px rgba(255, 255, 100, 0.25)"
+              zIndex={2}
+              pointerEvents="auto"
               bg="rgba(0,0,0,0.7)"
               color="white"
-              borderRadius="md"
-              boxShadow="lg"
-              pointerEvents="auto"
-              maxW="80%"
-              _after={{
-                content: '""',
-                position: 'absolute',
-                bottom: '-8px',
-                left: '20px',
-                borderLeft: '8px solid transparent',
-                borderRight: '8px solid transparent',
-                borderTop: '8px solid rgba(0,0,0,0.7)',
+              overflowY="auto"
+              p={4}
+              m={0}
+              css={{
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  width: '10px',
+                  background: 'rgba(0,0,0,0.1)',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(255,255,255,0.4)',
+                  borderRadius: '24px',
+                }
               }}
             >
-              <Text fontWeight="bold" mb={1} fontSize="md">
-                {det.title}
+              <Text fontWeight="bold" mb={2} fontSize="md">
+                Full Analysis
               </Text>
-              <Text fontSize="sm" mb={2} noOfLines={3}>
-                {det.fact}
-              </Text>
-              <IconButton
-                aria-label="More Info"
-                icon={<InfoIcon />}
-                size="xs"
-                colorScheme="teal"
-                onClick={() => handleExpand(det)}
-              />
+              {/* Render markdown content */}
+              <Box className="markdown-content">
+                <ReactMarkdown>
+                  {det.full_text}
+                </ReactMarkdown>
+              </Box>
             </Box>
-          </Box>
+          </React.Fragment>
         ))}
 
         {/* Camera Controls in top right corner */}
@@ -339,10 +384,13 @@ function App() {
               2. The app will automatically analyze content every 5 seconds
             </Text>
             <Text mb={2}>
-              3. Tap on any highlighted area to see the full analysis
+              3. Each detection has two boxes: a detection box (white border) and an analysis box (yellow border)
             </Text>
             <Text mb={2}>
-              4. Toggle the "Auto" switch to enable/disable automatic captures
+              4. The analysis box shows the complete markdown-formatted response
+            </Text>
+            <Text mb={2}>
+              5. Toggle the "Auto" switch to enable/disable automatic captures
             </Text>
             <Text>
               Use the flip camera button to switch between front and rear cameras.
@@ -351,7 +399,7 @@ function App() {
         </ModalContent>
       </Modal>
 
-      {/* Expanded Info Modal */}
+      {/* Expanded Info Modal - keep this as a fallback option */}
       <Modal isOpen={isInfoOpen} onClose={onInfoClose} size="md" motionPreset="slideInBottom" isCentered>
         <ModalOverlay />
         <ModalContent>
